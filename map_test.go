@@ -40,7 +40,7 @@ func TestMapPutIfAbsent(t *testing.T) {
 	m := New()
 	m.Set(NodeId(3), int(4))
 
-	prev, ok := m.putIfAbsent(NodeId(3), 5)
+	prev, ok := m.PutIfAbsent(NodeId(3), 5)
 	if ok {
 		t.Error("Return status error")
 	}
@@ -49,13 +49,31 @@ func TestMapPutIfAbsent(t *testing.T) {
 		t.Error("Return value error")
 	}
 
-	prev, ok = m.putIfAbsent(NodeId(4), 5)
+	prev, ok = m.PutIfAbsent(NodeId(4), 5)
 
 	if !ok {
 		t.Error("Return status error")
 	}
 
 	if prev != 5 {
+		t.Error("Return value error")
+	}
+}
+
+func TestMapKeys(t *testing.T) {
+	m := New()
+	m.Set(NodeId(3), int(4))
+	m.Set(NodeId(4), int(5))
+	if len(m.Keys()) != 2 {
+		t.Error("Return value error")
+	}
+}
+
+func TestMapValues(t *testing.T) {
+	m := New()
+	m.Set(NodeId(3), int(4))
+	m.Set(NodeId(4), int(5))
+	if len(m.Values()) != 2 {
 		t.Error("Return value error")
 	}
 }

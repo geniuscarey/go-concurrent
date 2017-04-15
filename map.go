@@ -48,9 +48,9 @@ func (cm concurrentMap) Len() int {
 
 func (cm concurrentMap) Set(k HashKey, v interface{}) {
 	i := getShardIndex(k)
-	cm[i].RLock()
+	cm[i].Lock()
 	cm[i].m[k] = v
-	cm[i].RUnlock()
+	cm[i].Unlock()
 }
 
 func (cm concurrentMap) Get(k HashKey) interface{} {
@@ -61,15 +61,55 @@ func (cm concurrentMap) Get(k HashKey) interface{} {
 	return v
 }
 
-func (cm concurrentMap) putIfAbsent(k HashKey, v interface{}) (interface{}, bool) {
+func (cm concurrentMap) PutIfAbsent(k HashKey, v interface{}) (interface{}, bool) {
 	i := getShardIndex(k)
-	cm[i].RLock()
-	defer cm[i].RUnlock()
+	cm[i].Lock()
+	defer cm[i].Unlock()
 	prev, ok := cm[i].m[k]
 	if ok {
 		return prev, false
 	} else {
 		cm[i].m[k] = v
 		return v, true
+	}
+}
+
+func (cm concurrentMap) Keys() (keys []HashKey) {
+	for i := 0; i < ShardNum; i++ {
+		cm[i].RLock()
+		for k := range cm[i].m {
+			keys = append(keys, k)
+		}
+		cm[i].RUnlock()
+	}
+
+	return
+}
+
+func (cm concurrentMap) Values() (values []interface{}) {
+	for i := 0; i < ShardNum; i++ {
+		cm[i].RLock()
+		for _, v := range cm[i].m {
+			values = append(values, v)
+		}
+		cm[i].RUnlock()
+	}
+
+	return
+}
+
+func (cm concurrentMap) Items() []HashKey {
+	return nil
+}
+
+func (cm concurrentMap) FromKeys([]HashKey) {
+
+}
+
+func (cm concurrentMap) Clear() {
+	for i := 0; i < ShardNum; i++ {
+		cm[i].RLock()
+		cm[i].m = make(map[HashKey]interface{})
+		cm[i].RUnlock()
 	}
 }
