@@ -9,7 +9,7 @@ func TestMapCreation(t *testing.T) {
 		t.Error("map is null.")
 	}
 
-	if m.Len() != 0 {
+	if !m.IsEmpty() {
 		t.Error("empty map's length should be zero")
 	}
 

@@ -98,18 +98,23 @@ func (cm concurrentMap) Values() (values []interface{}) {
 	return
 }
 
-func (cm concurrentMap) Items() []HashKey {
-	return nil
-}
-
-func (cm concurrentMap) FromKeys([]HashKey) {
-
-}
-
 func (cm concurrentMap) Clear() {
 	for i := 0; i < ShardNum; i++ {
 		cm[i].RLock()
 		cm[i].m = make(map[HashKey]interface{})
 		cm[i].RUnlock()
 	}
+}
+
+func (cm concurrentMap) Update(m map[HashKey]interface{}) {
+	for k, v := range m {
+		i := getShardIndex(k)
+		cm[i].Lock()
+		cm[i].m[k] = v
+		cm[i].Unlock()
+	}
+}
+
+func (cm concurrentMap) IsEmpty() bool {
+	return cm.Len() == 0
 }
