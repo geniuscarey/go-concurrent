@@ -1,7 +1,16 @@
 package concurrent
 
-import "testing"
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+	"testing"
+)
+
+type NodeId uint32
+
+func (id NodeId) hash() uint32 {
+	return uint32(id)
+}
 
 func TestMapCreation(t *testing.T) {
 	m := New()
@@ -12,13 +21,6 @@ func TestMapCreation(t *testing.T) {
 	if !m.IsEmpty() {
 		t.Error("empty map's length should be zero")
 	}
-
-}
-
-type NodeId uint32
-
-func (id NodeId) hash() uint32 {
-	return uint32(id)
 }
 
 func TestMapSet(t *testing.T) {
@@ -75,5 +77,14 @@ func TestMapValues(t *testing.T) {
 	m.Set(NodeId(4), int(5))
 	if len(m.Values()) != 2 {
 		t.Error("Return value error")
+	}
+}
+
+func TestMapItems(t *testing.T) {
+	m := New()
+	m.Set(NodeId(3), int(4))
+	m.Set(NodeId(4), int(5))
+	for k, v := range m.Items() {
+		fmt.Println(k, v)
 	}
 }
