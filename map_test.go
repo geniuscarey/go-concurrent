@@ -88,3 +88,13 @@ func TestMapItems(t *testing.T) {
 		fmt.Println(k, v)
 	}
 }
+
+func BenchmarkItems(b *testing.B) {
+	m := New()
+	for i := 0; i < 10000; i++ {
+		m.Set(NodeId(i), 0)
+	}
+	for n := 0; n < b.N; n++ {
+		m.Items()
+	}
+}
