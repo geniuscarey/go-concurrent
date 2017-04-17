@@ -1,14 +1,14 @@
 package concurrent
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type NodeId uint32
 
-func (id NodeId) hash() uint32 {
+func (id NodeId) Hash() uint32 {
 	return uint32(id)
 }
 
@@ -84,8 +84,43 @@ func TestMapItems(t *testing.T) {
 	m := NewMap()
 	m.Set(NodeId(3), int(4))
 	m.Set(NodeId(4), int(5))
-	for k, v := range m.Items() {
-		fmt.Println(k, v)
+	for _, _ = range m.Items() {
+		//
+	}
+}
+
+type timestamp time.Time
+
+func (t timestamp) Compare(v interface{}) bool {
+	o := v.(timestamp)
+	return time.Time(t).Sub(time.Time(o)) > 0
+}
+
+func TestMapPutIfNewer(t *testing.T) {
+	m := NewMap()
+	prev := timestamp(time.Now())
+	time.Sleep(time.Millisecond)
+	m.Set(NodeId(3), timestamp(time.Now()))
+	time.Sleep(time.Millisecond)
+	newer := m.PutIfNewer(NodeId(3), timestamp(time.Now()))
+	if !newer {
+		t.Error("PutIfNewer failed")
+	}
+
+	newer = m.PutIfNewer(NodeId(3), prev)
+	if newer {
+		t.Error("PutIfNewer failed")
+	}
+}
+
+func TestMapSortedKeys(t *testing.T) {
+	m := NewMap()
+	m.Set(NodeId(3), 4)
+	m.Set(NodeId(63), 5)
+	m.Set(NodeId(42), 5)
+	m.Set(NodeId(14), 5)
+	if m.SortedKeys()[1] != NodeId(14) {
+		t.Error("Sort is not correct")
 	}
 }
 
