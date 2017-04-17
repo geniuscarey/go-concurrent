@@ -9,11 +9,11 @@ const (
 )
 
 func getShardIndex(k HashKey) uint32 {
-	return k.hash() % ShardNum
+	return k.Hash() % ShardNum
 }
 
 type HashKey interface {
-	hash() uint32
+	Hash() uint32
 }
 
 type innerMap struct {
@@ -57,6 +57,15 @@ func (cm Map) Get(k HashKey) interface{} {
 	i := getShardIndex(k)
 	cm[i].RLock()
 	v := cm[i].m[k]
+	cm[i].RUnlock()
+	return v
+}
+
+func (cm Map) Delete(k HashKey) interface{} {
+	i := getShardIndex(k)
+	cm[i].RLock()
+	v := cm[i].m[k]
+	delete(cm[i].m, k)
 	cm[i].RUnlock()
 	return v
 }
