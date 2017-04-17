@@ -21,10 +21,10 @@ type innerMap struct {
 	sync.RWMutex
 }
 
-type ConcurrentMap []*innerMap
+type Map []*innerMap
 
-func New() ConcurrentMap {
-	var cm ConcurrentMap
+func NewMap() Map {
+	var cm Map
 
 	for i := 0; i < ShardNum; i++ {
 		cm = append(cm, &innerMap{
@@ -35,7 +35,7 @@ func New() ConcurrentMap {
 	return cm
 }
 
-func (cm ConcurrentMap) Len() int {
+func (cm Map) Len() int {
 	l := 0
 	for i := 0; i < ShardNum; i++ {
 		cm[i].RLock()
@@ -46,14 +46,14 @@ func (cm ConcurrentMap) Len() int {
 	return l
 }
 
-func (cm ConcurrentMap) Set(k HashKey, v interface{}) {
+func (cm Map) Set(k HashKey, v interface{}) {
 	i := getShardIndex(k)
 	cm[i].Lock()
 	cm[i].m[k] = v
 	cm[i].Unlock()
 }
 
-func (cm ConcurrentMap) Get(k HashKey) interface{} {
+func (cm Map) Get(k HashKey) interface{} {
 	i := getShardIndex(k)
 	cm[i].RLock()
 	v := cm[i].m[k]
@@ -61,7 +61,7 @@ func (cm ConcurrentMap) Get(k HashKey) interface{} {
 	return v
 }
 
-func (cm ConcurrentMap) Has(k HashKey) bool {
+func (cm Map) Has(k HashKey) bool {
 	i := getShardIndex(k)
 	cm[i].RLock()
 	_, ok := cm[i].m[k]
@@ -69,7 +69,7 @@ func (cm ConcurrentMap) Has(k HashKey) bool {
 	return ok
 }
 
-func (cm ConcurrentMap) Items() (m map[HashKey]interface{}) {
+func (cm Map) Items() (m map[HashKey]interface{}) {
 	m = make(map[HashKey]interface{})
 	for i := 0; i < ShardNum; i++ {
 		cm[i].RLock()
@@ -82,7 +82,7 @@ func (cm ConcurrentMap) Items() (m map[HashKey]interface{}) {
 	return
 }
 
-func (cm ConcurrentMap) PutIfAbsent(k HashKey, v interface{}) (interface{}, bool) {
+func (cm Map) PutIfAbsent(k HashKey, v interface{}) (interface{}, bool) {
 	i := getShardIndex(k)
 	cm[i].Lock()
 	defer cm[i].Unlock()
@@ -95,7 +95,7 @@ func (cm ConcurrentMap) PutIfAbsent(k HashKey, v interface{}) (interface{}, bool
 	}
 }
 
-func (cm ConcurrentMap) Keys() (keys []HashKey) {
+func (cm Map) Keys() (keys []HashKey) {
 	for i := 0; i < ShardNum; i++ {
 		cm[i].RLock()
 		for k := range cm[i].m {
@@ -107,7 +107,7 @@ func (cm ConcurrentMap) Keys() (keys []HashKey) {
 	return
 }
 
-func (cm ConcurrentMap) Values() (values []interface{}) {
+func (cm Map) Values() (values []interface{}) {
 	for i := 0; i < ShardNum; i++ {
 		cm[i].RLock()
 		for _, v := range cm[i].m {
@@ -119,7 +119,7 @@ func (cm ConcurrentMap) Values() (values []interface{}) {
 	return
 }
 
-func (cm ConcurrentMap) Clear() {
+func (cm Map) Clear() {
 	for i := 0; i < ShardNum; i++ {
 		cm[i].RLock()
 		cm[i].m = make(map[HashKey]interface{})
@@ -127,7 +127,7 @@ func (cm ConcurrentMap) Clear() {
 	}
 }
 
-func (cm ConcurrentMap) Update(m map[HashKey]interface{}) {
+func (cm Map) Update(m map[HashKey]interface{}) {
 	for k, v := range m {
 		i := getShardIndex(k)
 		cm[i].Lock()
@@ -136,6 +136,6 @@ func (cm ConcurrentMap) Update(m map[HashKey]interface{}) {
 	}
 }
 
-func (cm ConcurrentMap) IsEmpty() bool {
+func (cm Map) IsEmpty() bool {
 	return cm.Len() == 0
 }

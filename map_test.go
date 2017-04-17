@@ -13,7 +13,7 @@ func (id NodeId) hash() uint32 {
 }
 
 func TestMapCreation(t *testing.T) {
-	m := New()
+	m := NewMap()
 	if m == nil {
 		t.Error("map is null.")
 	}
@@ -24,7 +24,7 @@ func TestMapCreation(t *testing.T) {
 }
 
 func TestMapSet(t *testing.T) {
-	m := New()
+	m := NewMap()
 	m.Set(NodeId(3), int(4))
 
 	v := m.Get(NodeId(3))
@@ -39,7 +39,7 @@ func TestMapSet(t *testing.T) {
 }
 
 func TestMapPutIfAbsent(t *testing.T) {
-	m := New()
+	m := NewMap()
 	m.Set(NodeId(3), int(4))
 
 	prev, ok := m.PutIfAbsent(NodeId(3), 5)
@@ -63,7 +63,7 @@ func TestMapPutIfAbsent(t *testing.T) {
 }
 
 func TestMapKeys(t *testing.T) {
-	m := New()
+	m := NewMap()
 	m.Set(NodeId(3), int(4))
 	m.Set(NodeId(4), int(5))
 	if len(m.Keys()) != 2 {
@@ -72,7 +72,7 @@ func TestMapKeys(t *testing.T) {
 }
 
 func TestMapValues(t *testing.T) {
-	m := New()
+	m := NewMap()
 	m.Set(NodeId(3), int(4))
 	m.Set(NodeId(4), int(5))
 	if len(m.Values()) != 2 {
@@ -81,7 +81,7 @@ func TestMapValues(t *testing.T) {
 }
 
 func TestMapItems(t *testing.T) {
-	m := New()
+	m := NewMap()
 	m.Set(NodeId(3), int(4))
 	m.Set(NodeId(4), int(5))
 	for k, v := range m.Items() {
@@ -90,7 +90,7 @@ func TestMapItems(t *testing.T) {
 }
 
 func BenchmarkItems(b *testing.B) {
-	m := New()
+	m := NewMap()
 	for i := 0; i < 10000; i++ {
 		m.Set(NodeId(i), 0)
 	}
