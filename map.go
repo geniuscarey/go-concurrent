@@ -1,6 +1,7 @@
 package concurrent
 
 import (
+	"sort"
 	"sync"
 )
 
@@ -14,6 +15,24 @@ func getShardIndex(k HashKey) uint32 {
 
 type HashKey interface {
 	Hash() uint32
+}
+
+type Comparable interface {
+	Compare(interface{}) bool
+}
+
+type KeyList []HashKey
+
+func (l KeyList) Len() int {
+	return len(l)
+}
+
+func (l KeyList) Less(i, j int) bool {
+	return l[i].Hash() < l[j].Hash()
+}
+
+func (l KeyList) Swap(i, j int) {
+	l[i], l[j] = l[j], l[i]
 }
 
 type innerMap struct {
@@ -104,6 +123,25 @@ func (cm Map) PutIfAbsent(k HashKey, v interface{}) (interface{}, bool) {
 	}
 }
 
+func (cm Map) PutIfNewer(k HashKey, v interface{}) bool {
+	i := getShardIndex(k)
+	cm[i].Lock()
+	defer cm[i].Unlock()
+	prev, ok := cm[i].m[k]
+	if ok {
+		newer := v.(Comparable).Compare(prev)
+		if newer {
+			cm[i].m[k] = v
+			return true
+		} else {
+			return false
+		}
+	} else {
+		cm[i].m[k] = v
+		return true
+	}
+}
+
 func (cm Map) Keys() (keys []HashKey) {
 	for i := 0; i < ShardNum; i++ {
 		cm[i].RLock()
@@ -112,7 +150,19 @@ func (cm Map) Keys() (keys []HashKey) {
 		}
 		cm[i].RUnlock()
 	}
+	return
+}
 
+func (cm Map) SortedKeys() (keys []HashKey) {
+	for i := 0; i < ShardNum; i++ {
+		cm[i].RLock()
+		for k := range cm[i].m {
+			keys = append(keys, k)
+		}
+		cm[i].RUnlock()
+	}
+
+	sort.Sort(KeyList(keys))
 	return
 }
 
